@@ -24,7 +24,7 @@ boot:
 disk_error:
     mov ah, 0x0E    ; BIOS teletype output function
     mov al, '!'     ; Character to print
-    int 0x10        ; Call BIOS interrupt   
+    int 0x10        ; Call BIOS interrupt
     hlt             ; halt the system in case something went wrong
 
 times 510 - ($ - $$) db 0   ; we have to be 512 bytes long. erase the rest of the bytes
