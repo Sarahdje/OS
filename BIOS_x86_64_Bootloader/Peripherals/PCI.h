@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 // this is the struct responsible for holding information concerning individual PCI devices
-typedef struct pci_device {
+struct pci_device {
     uint16_t deviceID;              // identifies a particular device
     uint16_t vendorID;              // identifies the vendor of a device -> ignored for now
     uint16_t status;                // used to record status infos for PCI bus related events -> ignored for now
@@ -15,7 +15,7 @@ typedef struct pci_device {
     uint8_t cacheLineSize;          // specifies the devices cache size in 32 bit units. A device can limit the number of cacheline sizes it can support.
 };
 
-static inline void outl(uint16_t port, uint32_t value) {              
+static inline void outl(uint16_t port, uint32_t value) {
     asm volatile("outl %0, %w1" : : "a"(value), "Nd"(port));            // output IO
 }
 static inline uint32_t inl(uint16_t port) {
@@ -50,10 +50,10 @@ int scan_pci_devices(uint32_t* device_IDs_array, int MAX_PCI_DEVICES) {
                 // try out with func = 0
                 uint32_t value = pci_read32(bus, slot, 0, 0x00);
                 // now, check if the device exists or not
-                if (value & 0xFFFF == 0xFFFF) {
+                if ((value & 0xFFFF) == 0xFFFF) {
                     continue;                                          // the pci device does not exist
                 }
-                // the pci device exists. 
+                // the pci device exists.
                 number_of_pci_devices++;
                 device_IDs_array[ptr] = ((uint32_t)bus << 16) | ((uint32_t)slot << 8) | func;
             }

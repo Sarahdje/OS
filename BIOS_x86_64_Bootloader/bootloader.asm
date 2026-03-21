@@ -1,4 +1,7 @@
-org 0x7C00          ; tells nasm that the code will start at thet adress (convention)
+;; this is the stage 1 bootloader -- the first bit of code that is executed on the machine
+;; @AnisDjerrab, 2025, GPL v3.0
+
+org 0x7C00          ; tells nasm that the code will start at that adress (convention)
 bits 16             ; set ro the real mode
 start: jmp boot     ; set the boot function
 

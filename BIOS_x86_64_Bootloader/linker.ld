@@ -9,20 +9,23 @@ SECTIONS
 
     .text : ALIGN(1)
     {
-        BIOS_x86_64_Bootloader/early_boot.o(.text*)   
+        BIOS_x86_64_Bootloader/early_boot.o(.text*)
         BIOS_x86_64_Bootloader/main.o(.text*)
+        *(.text*)
     }
 
     .rodata : ALIGN(1)
     {
         BIOS_x86_64_Bootloader/early_boot.o(.rodata*)
         BIOS_x86_64_Bootloader/main.o(.rodata*)
+        *(.rodata*)
     }
 
     .data : ALIGN(1)
     {
         BIOS_x86_64_Bootloader/early_boot.o(.data*)
         BIOS_x86_64_Bootloader/main.o(.data*)
+        *(.data*)
     }
 
     .bss : ALIGN(1)

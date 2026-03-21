@@ -62,11 +62,11 @@ GtdDesc:                ; GTD descriptor
 
 bits 32
 
-;; reserve the minimal 4096 bytes of space for the P2, P3 and P4 tables
-p4_table equ 0x3000     ; hard coded adress for P4 table ([beginning adress]*8)
-p3_table equ 0x4000     ; hard coded adress for P3 table ([beginning adress]*8 + 4096)
-p2_table equ 0x5000     ; hard coded adress for P2 table ([beginning adress]*8 + 4096*2)
-PML4T_table equ 0x6000  ; A page map level 4 table, which replaces the p4 table as the root
+;; reserve the minimal 4096 bytes of space for the PT, PDT and PDPT tables
+PDPT_table equ 0x10000     ; hard coded adress for PDPT table ([beginning adress]*8)
+PDT_table equ 0x11000     ; hard coded adress for PDT table ([beginning adress]*8 + 4096)
+PT_table equ 0x12000     ; hard coded adress for PT table ([beginning adress]*8 + 4096*2)
+PML4T_table equ 0x13000  ; A page map level 4 table, which replaces the PDPT table as the root
 
 ; Access bits
 PRESENT        equ 1 << 7
@@ -76,7 +76,7 @@ DC             equ 1 << 2
 RW             equ 1 << 1
 ACCESSED       equ 1 << 0
 
-; Flags bits
+;; Flags bits
 GRAN_4K       equ 1 << 7
 SZ_32         equ 1 << 6
 LONG_MODE     equ 1 << 5
@@ -111,7 +111,7 @@ init32:
     mov gs, ax                      ; gs = 0x10
     mov ss, ax                      ; ss = 0x10
     ;; set the top of the stack to an arbitrary location
-    mov esp, 0x25000
+    mov esp, 0x200000
     ;; the VGA ptr will be considered edx
     ;; erase the vga memory
     mov edi, 0xb8000         ; Set pointer to VGA memory
@@ -147,35 +147,39 @@ init32:
     jz .error_missing_required_CPU_Feature                  ; If it's not set, there is no long mode
     ;; setup page tables
     ;; we first need to erase the previous content of the tables to avoid any bugs
-    mov edi, p4_table
+    mov edi, PDPT_table
     mov ecx, 4096*5
     xor eax, eax
     rep stosb
     ;; link the first PML4T table entry to the P4 table
-    mov eax, p4_table
+    mov eax, PDPT_table
     or eax, PAGE_PRESENT | PAGE_WRITE           ; present + writable
     mov [PML4T_table], eax
     ;; link the first P4 entry to the P3 table
-    mov eax, p3_table
+    mov eax, PDT_table
     or eax, PAGE_PRESENT | PAGE_WRITE           ; present + writable
-    mov [p4_table], eax
+    mov [PDPT_table], eax
     ;; link the first P3 entry to the P2 table
-    mov eax, p2_table
+    mov eax, PT_table
     or eax, PAGE_PRESENT | PAGE_WRITE           ; present + writable
-    mov [p3_table], eax
+    mov [PDT_table], eax
     ;; now we need to map each p2 table entry to a 4096 Bytes page
     ;; this way our kernel will have 2Mib of virtual memory directly
     ;; we *could* use 1Gb pages, but they would break compatibility with older intel CPU from before 2010
     ;; in order to achieve this, we need a loop which maps physical pages from 0x0 forward in memory
     mov ecx, 0                      ; counted variable
-    mov eax, PAGE_PRESENT | PAGE_WRITE          ; present + writable
-.map_p2_table:
-    ;; map the ecx entry of the p2_table to a page that starts at adress 0x0 * ecx
-    mov [p2_table + ecx*8], eax     ; map ecx-th entry
-    add eax, 0x1000                 ; 4096 Bytes
+    mov edx, PAGE_PRESENT | PAGE_WRITE          ; present + writable
+    mov eax, edx
+    xor ebx, ebx
+.map_PT_table:
+    ;; map the ecx entry of the PT_table to a page that starts at adress 0x0 * ecx
+    mov [PT_table + ecx*8], eax     ; map ecx-th entry
+    add ebx, 0x1000                 ; 4096 Bytes
+    mov eax, edx
+    or eax, ebx
     inc ecx                         ; increase counter
     cmp ecx, 512                    ; check if we succesfully mapped all pages
-    jnae .map_p2_table              ; if it's not done yet, continue. else, exit the loop.
+    jnae .map_PT_table              ; if it's not done yet, continue. else, exit the loop.
     ;; no, we enable paging directly using the cr3 CPU register
     mov eax, PML4T_table            ; eax contains the adress of the P4 table
     mov cr3, eax                    ; mov this adress in the cr3 control register
@@ -250,9 +254,9 @@ init64:
     mov al, bh
     out dx, al
     ;; finally, load and launch the C main the scan disks and mount the ext2 partition
-    mov rsp, 0x200000               ; set the top of the stack to the very end of the mapped RAM area
+    mov rsp, 0x200000            ; set the top of the stack to the very end of the mapped RAM area
     lea rax, [ rel C_main ]
-    call rax                        ; now, we officially handed control of everything to the C main.
+    call rax                     ; now, we officially handed control of everything to the C main.
 
 section .rodata
     msg1 db "succesfully entered long mode, and initialized bootloader...", 0
