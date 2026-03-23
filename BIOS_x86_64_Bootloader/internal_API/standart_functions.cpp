@@ -48,7 +48,7 @@ int strlen(const char* str) {
 int printf(const char* str, int line) {
     int lenMessage = strlen(str);
     int numberOfLines = ( lenMessage + 79 ) / 80;
-    char16_t placeholder = 0x0007;
+    char16_t placeholder = 0x0700;
     if (25 - line >= numberOfLines) {
         memset((int*)(VGA_MEMORY + line*160), placeholder, numberOfLines*80);
         for (int i = 0; i < lenMessage*2; i+=2) {

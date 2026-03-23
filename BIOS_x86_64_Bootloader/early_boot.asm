@@ -250,6 +250,7 @@ init64:
 global setCursorPos
 setCursorPos:
     ;; the cursor position is contained in edi
+    push rbx
     mov ebx, edi
     mov dx, 0x3D4
     mov al, 0x0E
@@ -263,6 +264,7 @@ setCursorPos:
     mov dx, 0x3D5
     mov al, bl
     out dx, al
+    pop rbx
     ret
 
 
