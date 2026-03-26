@@ -8,7 +8,8 @@ bootloader:
 	nasm -f elf64 "${bootloader}"/early_boot.asm -o "${bootloader}"/early_boot.o
 	g++ $(bootloader_flags) -c -o "${bootloader}"/internal_API/standart_functions.o "${bootloader}"/internal_API/standart_functions.cpp
 	g++ $(bootloader_flags) -c -o "${bootloader}"/main.o "${bootloader}"/main.cpp
-	ld -r "${bootloader}"/main.o "${bootloader}"/internal_API/standart_functions.o -o "${bootloader}"/c_combined.o
+	g++ $(bootloader_flags) -c -o "${bootloader}"/Peripherals/PCI.o "${bootloader}"/Peripherals/PCI.c
+	ld -r "${bootloader}"/main.o "${bootloader}"/internal_API/standart_functions.o "${bootloader}"/Peripherals/PCI.o -o "${bootloader}"/c_combined.o
 	ld -T "${bootloader}"/linker.ld "${bootloader}"/early_boot.o "${bootloader}"/c_combined.o --oformat binary -o "${bootloader}"/early_boot.bin
 
 bootdisk: bootloader
