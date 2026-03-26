@@ -1,5 +1,6 @@
 // this file contains definitions of the standard functions provided to the bootloader
 
+#include <iterator>
 #include <stdint.h>
 #include <uchar.h>
 
@@ -15,3 +16,5 @@ void memset(int* ptr, char16_t value, uint64_t size);
 int strlen(const char* str);
 
 int printf(const char* str, int line);
+
+char* itoa(int number, char* str, int base);

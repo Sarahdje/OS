@@ -71,3 +71,48 @@ int printf(const char* str, int line) {
     setCursorPos(index);
     return line;
 }
+
+char* itoa(int number, char* str, int base) {
+    int index = 0;
+    if (number == 0) {
+        str[index] = '0';
+        index++;
+    } else {
+        if (base < 2 || base > 36) {
+            // nothing happens.
+            // we cannot throw an error as early in the boot process : it would make the hole operating system just crash.
+        } else {
+            if (number < 0 && base == 10) {
+                str[index] = '-';
+                index++;
+                number = -number;
+            }
+            static const char digits[] = "0123456789ABCDEFGHIGKLMNOPQRSTUVWXYZ";
+            int i = 0;
+            int64_t tmp;
+            int j = 0;
+            while (number > 0) {
+                i++;
+                int64_t result = number %base;
+                number /= base;
+                // push the result onto the stack, and pop it later so we can simply & without any heap inverse the results
+                asm volatile("pushq %0"
+                            :
+                            : "r"(result)
+                            : "memory"
+                );
+            }
+            for (; j < i; j++) {
+                asm volatile("popq %0"
+                            : "=r"(tmp)
+                            :
+                            : "memory"
+                );
+                str[j + index] = digits[tmp];
+            }
+            index += j;
+        }
+    }
+    str[index] = 0;
+    return str;
+}

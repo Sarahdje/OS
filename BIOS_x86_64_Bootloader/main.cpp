@@ -11,7 +11,9 @@ uint32_t* PCI_FOUND_DEVICES = (uint32_t*)(0x104000 + sizeof(pci_device)* MAX_PCI
 extern "C" void C_main() {
     setCursorPos(0);
     int line = 1;
-    printf("test of the printf function...", line);
+    line = printf("test of the printf function...", line);
+    char converted_number[9];
+    line = printf(itoa(255, converted_number, 16), line);
     asm volatile("hlt");
     // now, we first need to scan all the peripherals to find the different disks connected via USB, SATA or IDE
     // we don't need to parse the AML tables just yet -- we can scan the PCI devices directly
